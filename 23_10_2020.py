@@ -48,10 +48,10 @@ print('---')
 def FLT(a, b):
     return pow(a, b-2) % b
 
-print(EEA(22, 59))
-print(EEA(7, 15))
-print(EEA(49, 101))
-print(EEA(66, 123))
+print(FLT(22, 59))
+print(FLT(7, 15))
+print(FLT(49, 101))
+print(FLT(66, 123))
 
 print('---')
 
