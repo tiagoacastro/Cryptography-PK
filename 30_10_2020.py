@@ -25,6 +25,7 @@ cryptogram = RSAEncode(cu.bytes_to_long(bytearray(input("Input something\n").enc
 decoded = cu.long_to_bytes(RSADecode(cryptogram, d, n)).decode()
 print(str(decoded))
 
+
 # Ex3
 
 def msgf1 (msg, len):
