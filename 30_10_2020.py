@@ -27,12 +27,14 @@ print(str(decoded))
 
 # Ex3
 
-def msgf1 (msg, len):
+def mgf1 (msg, len):
     num = cu.bytes_to_long(msg)
-    output = 0b0
-    for i in range(math.ceil(len/32)-1):
+    output = 0
+    shift = 0
+    for i in range(math.ceil(len / 32)):
         temp = hl.sha256(cu.long_to_bytes((num << 32) + i))
-        output = (output << temp.digest_size) + cu.bytes_to_long(temp.digest())
-    return cu.long_to_bytes(output >> (output.bit_length() - len))
+        output = (output << (temp.digest_size * 8)) + cu.bytes_to_long(temp.digest())
+        shift = shift + 256
+    return cu.long_to_bytes(output >> (shift - len * 8))
 
-print(msgf1(bytearray(input("Input something\n").encode()), 56))
+print(mgf1(bytearray(input("Input something\n").encode()), 56))
