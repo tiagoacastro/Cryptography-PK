@@ -123,8 +123,58 @@ def createEMSAPSS(msg):
     if emLen < hLen + sLen + 2:
         return "Error"
     mHash = hl.sha256(msg).digest()
+    if len(mHash) != hLen:
+        return "Error"
+    salt = cu.getRandomNBitInteger(sLen*8)
+    M = ((salt << hLen*8) + cu.bytes_to_long(mHash)) << 64
+    if len(cu.long_to_bytes(M)) != 8 + hLen + sLen:
+        return "Error"
+    H = hl.sha256(cu.long_to_bytes(M)).digest()
+    if len(H) != hLen:
+        return "Error"
+    DB = ((salt << 8) + 0x01) << ((emLen - sLen - hLen - 2)*8)
+    if len(cu.long_to_bytes(DB)) != emLen - hLen - 1:
+        return "Error"
+    dbMask = mgf1(H, emLen - hLen - 1)
+    maskedDB = DB ^ cu.bytes_to_long(dbMask)
+    return (((0xbc << (hLen * 8)) + cu.bytes_to_long(H)) << (len(cu.long_to_bytes(maskedDB)) * 8)) + maskedDB
 
-    return
+def verifyEMSAPSS(msg, EM):
+    hLen = 32
+    sLen = 32
+    emLen = 255
+    if emLen < hLen + sLen + 2:
+        return "Error1"
+    mHash = hl.sha256(msg).digest()
+    if len(mHash) != hLen:
+        return "Error2"
+    MSB = EM >> ((emLen - 1) * 8)
+    if MSB != 0xbc:
+        return "Error3"
+    maskedDB = EM - ((EM >> ((emLen - hLen - 1) * 8)) << ((emLen - hLen - 1) * 8))
+    H = (EM - ((EM >> ((emLen - 1) * 8)) << ((emLen - 1) * 8)) - maskedDB) >> ((emLen - hLen - 1) * 8)
+    dbMask = mgf1(cu.long_to_bytes(H), emLen - hLen - 1)
+    DB = maskedDB ^ cu.bytes_to_long(dbMask)
+    if (DB - ((DB >> ((emLen - hLen - sLen - 2) * 8)) << ((emLen - hLen - sLen - 2) * 8))) != 0:
+        return "Error4"
+    if ((DB - ((DB >> ((emLen - hLen - sLen - 1) * 8)) << ((emLen - hLen - sLen - 1) * 8))) >> ((emLen - hLen - sLen - 2) * 8)) != 0x01:
+        return "Error5"
+    salt = DB >> ((len(cu.long_to_bytes(DB)) - sLen) * 8)
+    M = ((salt << hLen * 8) + cu.bytes_to_long(mHash)) << 64
+    H2 = hl.sha256(cu.long_to_bytes(M)).digest()
+    if len(H2) != hLen:
+        return "Error6"
+    if H == H2:
+        return "Error7"
+    return "Verified"
 
-def verifyEMSAPSS(EM, msg):
-    return
+msg = input("Input something\n")
+signature = createEMSAPSS(bytearray(msg.encode()))
+if signature == "Error":
+    print("Error creating signature")
+else:
+    message = verifyEMSAPSS(bytearray(msg.encode()), signature)
+    if message == "Error":
+        print("Error verifying signature")
+    else:
+        print(message)

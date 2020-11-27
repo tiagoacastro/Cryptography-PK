@@ -60,11 +60,11 @@ def OAEPDecoding (cipher):
     return M
 
 cryptogram = OAEPEncoding(bytearray(input("Input something\n").encode()))
-if (cryptogram == "Error"):
+if cryptogram == "Error":
     print("Error encoding")
 else:
     message = OAEPDecoding(cryptogram)
-    if (message == "Error"):
+    if message == "Error":
         print("Error decoding")
     else:
         print(str(message.decode()))
