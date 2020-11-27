@@ -81,7 +81,7 @@ def RSADecode (c, d, n):
 
 def RSAOAEPciphering (msg, n, e):
     BEM = OAEPEncoding(bytearray(msg.encode()))
-    if (cryptogram == "Error"):
+    if (BEM == "Error"):
         print("Error encoding")
         exit()
     C = RSAEncode (BEM, e, n)
