@@ -178,3 +178,36 @@ else:
         print("Error verifying signature")
     else:
         print(message)
+
+
+
+# ex3
+
+def createRSAPSS(msg, n, d):
+    EM = createEMSAPSS(msg)
+    EM = pow(EM, d, n)
+    return cu.long_to_bytes(EM)
+
+def verifyRSAPSS(msg, signature, n, e):
+    EM = cu.bytes_to_long(signature)
+    EM = pow(EM, e, n)
+    return verifyEMSAPSS(msg, EM)
+
+p = cu.getPrime(1536)
+q = cu.getPrime(512)
+n = p * q
+f = (p - 1) * (q - 1)
+e = cu.getRandomNBitInteger(128)
+while e <= 1 or e >= f or cu.GCD(f, e) != 1:
+    e = cu.getRandomNBitInteger(128)
+d = cu.inverse(e, f)
+msg = input("Input something\n")
+signature = createRSAPSS(bytearray(msg.encode()), n, d)
+if signature == "Error":
+    print("Error creating signature")
+else:
+    message = verifyRSAPSS(bytearray(msg.encode()), signature, n, e)
+    if message == "Error":
+        print("Error verifying signature")
+    else:
+        print(message)
