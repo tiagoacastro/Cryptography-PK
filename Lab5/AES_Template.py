@@ -1,4 +1,5 @@
 import copy
+import math
 
 Sbox = [
     0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76,
@@ -69,33 +70,53 @@ def rotWord(temp, pos):
     return ((temp & aux) << (pos * 8)) + (temp >> (pos * 8))
 
 def subWord(word):
-    #make SBox transformation for one integer given as a "word".
-    return
+    aux = 0
+    for i in range(4):
+        temp = (word >> (i * 8)) & 0xFF
+        aux += Sbox[temp] << (i * 8)
+    return aux
 
 def subWords():
-    #make SBox transformation for all integers in a state. Using subWord function.
-    return
+    for i, s in enumerate(state):
+        state[i] = subWord(s)
 
 def expandKey():
-    #expand key. Using rotWord and subWord.
-    return
+    for i in range(Nk, (Nr + 1) * Nb):
+        tmp = K[i-1]
+        if i % Nk == 0:
+            tmp = rotWord(subWord(tmp), 1) ^ Rcon[math.floor(i / Nk) - 1]
+        elif Nk > 6 and i % Nk == 4:
+            tmp = subWord(tmp)
+        K.append(K[i - Nk] ^ tmp)
 
 def addRoundKey(roundKey):
-    #add round key given as an 4 ints array "roundKey"
-    return
+    for i, s in enumerate(state):
+        state[i] = s ^ roundKey[i]
 
 def shiftRows():
-    #make shift rows. Using rotWord and transpo.
-    return
+    transpo()
+    for i, s in enumerate(state):
+        state[i] = rotWord(s, i)
+    transpo()
 
 def multiplyRows(row, col):
-    #multiply row by col respecting galois field. Using xTimes.
-    return
+    result = 0
+    side = 2
+    for rc in range(side):
+        for cr in range(side):
+            result ^= xTimes(mixingVars[row*side+rc], state[cr*side+col])
+    return result
 
 def mixColumns():
-    #perfrom Mix Columns operation. Using multiplyRows and transpo. Extract rows and cols appropriately
-    #then call mutliplyRows.
-    return
+    transpo()
+    newState = copy.deepcopy(state)
+    side = 2
+    for i in range(side):
+        for j in range(side):
+            newState[i*side*j] = multiplyRows(i, j)
+    for i in range(len(state)):
+        state[i] = newState[i]
+    transpo()
 
 expandKey()
 addRoundKey(K[0:Nb])
