@@ -64,10 +64,7 @@ def transpo():
             state[i] += ((aux[j] >> ((len(aux) - i - 1)*8)) & 0xFF) << ((len(aux) - j - 1)*8)
 
 def rotWord(temp, pos):
-    aux = 0
-    for j in range(pos):
-        aux += 0xFF << (j * 8)
-    return ((temp & aux) << (pos * 8)) + (temp >> (pos * 8))
+    return ((temp << pos*8) | (temp >> 32 - (pos*8))) & 0xFFFFFFFF
 
 def subWord(word):
     aux = 0
@@ -101,19 +98,16 @@ def shiftRows():
 
 def multiplyRows(row, col):
     result = 0
-    side = 2
-    for rc in range(side):
-        for cr in range(side):
-            result ^= xTimes(mixingVars[row*side+rc], state[cr*side+col])
+    for i in range(len(state)):
+        result ^= xTimes((row >> (i*8)) & 0xFF, (col >> (i*8)) & 0xFF)
     return result
 
 def mixColumns():
-    transpo()
     newState = copy.deepcopy(state)
-    side = 2
-    for i in range(side):
-        for j in range(side):
-            newState[i*side*j] = multiplyRows(i, j)
+    for i in range(len(state)):
+        newState[i] = 0
+        for j in range(len(state)):
+            newState[i] += multiplyRows(mixingVars[i], state[j]) << ((len(state)-j-1)*8)
     for i in range(len(state)):
         state[i] = newState[i]
     transpo()
